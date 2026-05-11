@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "Memo",
+    "slug": "memo",
+    "scheme": "memo-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/mixboard-image.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/mixboard-image.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/mixboard-image.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.memo.app",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/mixboard-image.png"
+    },
+    "plugins": [
+      "expo-audio",
+      "expo-secure-store",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/ionicons.ttf"
+          ]
+        }
+      ],
+      "expo-document-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/mixboard-image.png",
+          "color": "#153328",
+          "defaultChannel": "recording"
+        }
+      ],
+      "./plugins/withRecordingService",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fb79ad38-e4bd-41d7-9edf-bb7d3b3ae2d3"
+      }
+    }
+  }
+}

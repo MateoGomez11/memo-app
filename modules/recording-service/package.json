@@ -1,0 +1,7 @@
+{
+  "name": "recording-service",
+  "version": "1.0.0",
+  "description": "Android Foreground Service for background audio recording",
+  "main": "src/index",
+  "files": ["src", "android", "expo-module.config.json"]
+}
