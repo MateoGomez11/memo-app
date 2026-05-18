@@ -763,7 +763,7 @@ export default function ActiveRecordingScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.surface }]}>
       <View style={[styles.bgGradient, { pointerEvents: 'none', backgroundColor: colors.primaryFixed }]} />
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingBottom: spacing.stackLg + insets.bottom }]}>
 
         <View style={styles.header}>
           <View style={styles.recordingBadge}>
@@ -841,7 +841,7 @@ export default function ActiveRecordingScreen() {
       <Modal visible={showStopModal} transparent animationType="none" onRequestClose={closeStopModal}>
         <Animated.View style={[sheetStyles.overlay, { opacity: stopFade }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={closeStopModal} />
-          <Animated.View style={[sheetStyles.sheet, { backgroundColor: colors.surfaceContainerLow, transform: [{ translateY: stopSlide }] }]}>
+          <Animated.View style={[sheetStyles.sheet, { backgroundColor: colors.surfaceContainerLow, transform: [{ translateY: stopSlide }], paddingBottom: 40 + insets.bottom }]}>
             <View style={[sheetStyles.handle, { backgroundColor: colors.outlineVariant }]} />
             {!confirmDiscardAudio ? (
               <>
@@ -905,7 +905,7 @@ export default function ActiveRecordingScreen() {
       <Modal visible={showDiscardModal} transparent animationType="none" onRequestClose={closeDiscardModal}>
         <Animated.View style={[sheetStyles.overlay, { opacity: discardFade }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={closeDiscardModal} />
-          <Animated.View style={[sheetStyles.sheet, { backgroundColor: colors.surfaceContainerLow, transform: [{ translateY: discardSlide }] }]}>
+          <Animated.View style={[sheetStyles.sheet, { backgroundColor: colors.surfaceContainerLow, transform: [{ translateY: discardSlide }], paddingBottom: 40 + insets.bottom }]}>
             <View style={[sheetStyles.handle, { backgroundColor: colors.outlineVariant }]} />
             <View style={{ marginBottom: 4 }}>
               <View style={[sheetStyles.actionIcon, { backgroundColor: colors.errorContainer, width: 72, height: 72, borderRadius: 36, alignSelf: 'center' }]}>

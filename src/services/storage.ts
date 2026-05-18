@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { Meeting } from '../types';
+import { Meeting, Folder } from '../types';
 
 const MEETINGS_KEY = 'memo_meetings';
 const API_KEY_KEY = 'memo_gemini_api_key';
@@ -106,4 +106,36 @@ export async function getActiveRecording(): Promise<ActiveRecordingData | null> 
   const raw = await AsyncStorage.getItem(ACTIVE_RECORDING_KEY);
   if (!raw) return null;
   return JSON.parse(raw) as ActiveRecordingData;
+}
+
+const FOLDERS_KEY = 'memo_folders';
+
+export async function getFolders(): Promise<Folder[]> {
+  const raw = await AsyncStorage.getItem(FOLDERS_KEY);
+  if (!raw) return [];
+  return JSON.parse(raw) as Folder[];
+}
+
+export async function saveFolder(folder: Folder): Promise<void> {
+  const existing = await getFolders();
+  const updated = [folder, ...existing.filter((f) => f.id !== folder.id)];
+  await AsyncStorage.setItem(FOLDERS_KEY, JSON.stringify(updated));
+}
+
+export async function deleteFolder(id: string): Promise<void> {
+  const [folders, meetings] = await Promise.all([getFolders(), getMeetings()]);
+  const updatedFolders = folders.filter((f) => f.id !== id);
+  const updatedMeetings = meetings.map((m) => m.folderId === id ? { ...m, folderId: undefined } : m);
+  await Promise.all([
+    AsyncStorage.setItem(FOLDERS_KEY, JSON.stringify(updatedFolders)),
+    AsyncStorage.setItem(MEETINGS_KEY, JSON.stringify(updatedMeetings)),
+  ]);
+}
+
+export async function updateMeetingFolder(meetingId: string, folderId: string | null): Promise<void> {
+  const meetings = await getMeetings();
+  const updated = meetings.map((m) =>
+    m.id === meetingId ? { ...m, folderId: folderId ?? undefined } : m
+  );
+  await AsyncStorage.setItem(MEETINGS_KEY, JSON.stringify(updated));
 }

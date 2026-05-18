@@ -8,7 +8,7 @@ import {
   Animated,
   Pressable,
 } from 'react-native';
-import { Meeting } from '../types';
+import { Meeting, Folder } from '../types';
 import { lightColors, typography, spacing, radius, shadow } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,8 @@ interface Props {
   onDelete?: () => void;
   onToggleFavorite?: () => void;
   onProcess?: () => void;
+  onMoveToFolder?: (folderId: string | null) => void;
+  folders?: Folder[];
 }
 
 const AI_COLORS = ['#6C63FF', '#3B82F6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#6C63FF'] as const;
@@ -43,21 +45,27 @@ function ContextMenu({
   onClose,
   onToggleFavorite,
   onDelete,
+  onMoveToFolder,
+  folders,
 }: {
   visible: boolean;
   meeting: Meeting;
   onClose: () => void;
   onToggleFavorite?: () => void;
   onDelete?: () => void;
+  onMoveToFolder?: (folderId: string | null) => void;
+  folders?: Folder[];
 }) {
   const { colors, t } = useAppContext();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     if (visible) {
       setConfirmDelete(false);
+      setShowFolderPicker(false);
       Animated.parallel([
         Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
         Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, damping: 22, stiffness: 260 }),
@@ -72,6 +80,7 @@ function ContextMenu({
 
   const handleFavorite = () => { onToggleFavorite?.(); onClose(); };
   const handleDeleteConfirm = () => { onDelete?.(); onClose(); };
+  const isEs = t('cancel') === 'Cancelar';
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
@@ -80,34 +89,64 @@ function ContextMenu({
         <Animated.View style={[menuStyles.sheet, { backgroundColor: colors.surfaceContainerLow, transform: [{ translateY: slideAnim }] }]}>
           <View style={[menuStyles.handle, { backgroundColor: colors.outlineVariant }]} />
 
-          <Text style={[menuStyles.sheetTitle, { color: colors.onSurface }]} numberOfLines={2}>{meeting.title}</Text>
-          <View style={[menuStyles.divider, { backgroundColor: colors.surfaceContainerHighest }]} />
-
-          {!confirmDelete ? (
+          {/* ── Folder Picker View ── */}
+          {showFolderPicker ? (
             <>
-              <TouchableOpacity style={menuStyles.item} onPress={handleFavorite} activeOpacity={0.7}>
-                <View style={[menuStyles.itemIcon, { backgroundColor: colors.primaryFixed }]}>
-                  <Ionicons name={meeting.favorite ? 'star' : 'star-outline'} size={20} color={colors.primary} />
-                </View>
-                <Text style={[menuStyles.itemLabel, { color: colors.onSurface }]}>
-                  {meeting.favorite ? (t('cancel') === 'Cancelar' ? 'Quitar de favoritos' : 'Remove from favorites') : (t('cancel') === 'Cancelar' ? 'Marcar como favorito' : 'Mark as favorite')}
-                </Text>
+              <TouchableOpacity style={menuStyles.backRow} onPress={() => setShowFolderPicker(false)} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={20} color={colors.onSurface} />
+                <Text style={[menuStyles.sheetTitle, { color: colors.onSurface, marginBottom: 0 }]}>{t('folder_move')}</Text>
               </TouchableOpacity>
+              <View style={[menuStyles.divider, { backgroundColor: colors.surfaceContainerHighest }]} />
 
-              <TouchableOpacity style={menuStyles.item} onPress={() => setConfirmDelete(true)} activeOpacity={0.7}>
-                <View style={[menuStyles.itemIcon, { backgroundColor: colors.errorContainer }]}>
-                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+              {!folders || folders.length === 0 ? (
+                <View style={menuStyles.noFolders}>
+                  <Ionicons name="folder-outline" size={36} color={colors.outline} />
+                  <Text style={[menuStyles.noFoldersText, { color: colors.onSurfaceVariant }]}>
+                    {t('folder_no_folders')}
+                  </Text>
                 </View>
-                <Text style={[menuStyles.itemLabel, { color: colors.error }]}>
-                  {t('delete_memo_title')}
-                </Text>
+              ) : (
+                <>
+                  {folders.map(folder => {
+                    const isCurrent = meeting.folderId === folder.id;
+                    return (
+                      <TouchableOpacity
+                        key={folder.id}
+                        style={[menuStyles.folderItem, isCurrent && { backgroundColor: colors.surfaceContainerHigh }]}
+                        onPress={() => { onMoveToFolder?.(folder.id); onClose(); }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[menuStyles.folderDot, { backgroundColor: folder.color }]} />
+                        <Text style={[menuStyles.itemLabel, { color: colors.onSurface, flex: 1 }]}>{folder.name}</Text>
+                        {isCurrent && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {meeting.folderId && (
+                    <TouchableOpacity
+                      style={menuStyles.folderItem}
+                      onPress={() => { onMoveToFolder?.(null); onClose(); }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[menuStyles.folderDot, { backgroundColor: colors.outline }]} />
+                      <Text style={[menuStyles.itemLabel, { color: colors.onSurfaceVariant, flex: 1 }]}>
+                        {t('folder_remove_from')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+
+              <TouchableOpacity style={[menuStyles.closeBtn, { backgroundColor: colors.surfaceContainerHigh }]} onPress={onClose} activeOpacity={0.8}>
+                <Text style={[menuStyles.closeBtnText, { color: colors.onSurfaceVariant }]}>{t('cancel')}</Text>
               </TouchableOpacity>
             </>
-          ) : (
+          ) : confirmDelete ? (
+            /* ── Delete Confirm View ── */
             <View style={menuStyles.confirmBox}>
               <Ionicons name="alert-circle-outline" size={36} color={colors.error} />
               <Text style={[menuStyles.confirmTitle, { color: colors.onSurface }]}>
-                {t('cancel') === 'Cancelar' ? '¿Eliminar este memo?' : 'Delete this memo?'}
+                {isEs ? '¿Eliminar este memo?' : 'Delete this memo?'}
               </Text>
               <Text style={[menuStyles.confirmSub, { color: colors.onSurfaceVariant }]}>
                 {t('delete_memo_confirm')}
@@ -121,12 +160,50 @@ function ContextMenu({
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+          ) : (
+            /* ── Main Menu View ── */
+            <>
+              <Text style={[menuStyles.sheetTitle, { color: colors.onSurface }]} numberOfLines={2}>{meeting.title}</Text>
+              <View style={[menuStyles.divider, { backgroundColor: colors.surfaceContainerHighest }]} />
 
-          {!confirmDelete && (
-            <TouchableOpacity style={[menuStyles.closeBtn, { backgroundColor: colors.surfaceContainerHigh }]} onPress={onClose} activeOpacity={0.8}>
-              <Text style={[menuStyles.closeBtnText, { color: colors.onSurfaceVariant }]}>{t('cancel')}</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={menuStyles.item} onPress={handleFavorite} activeOpacity={0.7}>
+                <View style={[menuStyles.itemIcon, { backgroundColor: colors.primaryFixed }]}>
+                  <Ionicons name={meeting.favorite ? 'star' : 'star-outline'} size={20} color={colors.primary} />
+                </View>
+                <Text style={[menuStyles.itemLabel, { color: colors.onSurface }]}>
+                  {meeting.favorite
+                    ? (isEs ? 'Quitar de favoritos' : 'Remove from favorites')
+                    : (isEs ? 'Marcar como favorito' : 'Mark as favorite')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={menuStyles.item} onPress={() => setShowFolderPicker(true)} activeOpacity={0.7}>
+                <View style={[menuStyles.itemIcon, { backgroundColor: colors.secondaryContainer }]}>
+                  <Ionicons name="folder-outline" size={20} color={colors.secondary} />
+                </View>
+                <Text style={[menuStyles.itemLabel, { color: colors.onSurface }]}>{t('folder_move')}</Text>
+                {meeting.folderId && folders?.find(f => f.id === meeting.folderId) && (
+                  <View style={[menuStyles.folderBadge, { backgroundColor: folders.find(f => f.id === meeting.folderId)!.color }]}>
+                    <Text style={menuStyles.folderBadgeText} numberOfLines={1}>
+                      {folders.find(f => f.id === meeting.folderId)!.name}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity style={menuStyles.item} onPress={() => setConfirmDelete(true)} activeOpacity={0.7}>
+                <View style={[menuStyles.itemIcon, { backgroundColor: colors.errorContainer }]}>
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </View>
+                <Text style={[menuStyles.itemLabel, { color: colors.error }]}>
+                  {t('delete_memo_title')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[menuStyles.closeBtn, { backgroundColor: colors.surfaceContainerHigh }]} onPress={onClose} activeOpacity={0.8}>
+                <Text style={[menuStyles.closeBtnText, { color: colors.onSurfaceVariant }]}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </>
           )}
         </Animated.View>
       </Animated.View>
@@ -134,7 +211,7 @@ function ContextMenu({
   );
 }
 
-export default function MemoCard({ meeting, onPress, featured, onDelete, onToggleFavorite, onProcess }: Props) {
+export default function MemoCard({ meeting, onPress, featured, onDelete, onToggleFavorite, onProcess, onMoveToFolder, folders }: Props) {
   const { colors, t } = useAppContext();
   const needsProcessing = meeting.processed === false;
   const [menuVisible, setMenuVisible] = useState(false);
@@ -191,7 +268,15 @@ export default function MemoCard({ meeting, onPress, featured, onDelete, onToggl
           </View>
         </TouchableOpacity>
 
-        <ContextMenu visible={menuVisible} meeting={meeting} onClose={() => setMenuVisible(false)} onToggleFavorite={onToggleFavorite} onDelete={onDelete} />
+        <ContextMenu
+          visible={menuVisible}
+          meeting={meeting}
+          onClose={() => setMenuVisible(false)}
+          onToggleFavorite={onToggleFavorite}
+          onDelete={onDelete}
+          onMoveToFolder={onMoveToFolder}
+          folders={folders}
+        />
       </>
     );
   }
@@ -221,7 +306,15 @@ export default function MemoCard({ meeting, onPress, featured, onDelete, onToggl
         </View>
       </TouchableOpacity>
 
-      <ContextMenu visible={menuVisible} meeting={meeting} onClose={() => setMenuVisible(false)} onToggleFavorite={onToggleFavorite} onDelete={onDelete} />
+      <ContextMenu
+        visible={menuVisible}
+        meeting={meeting}
+        onClose={() => setMenuVisible(false)}
+        onToggleFavorite={onToggleFavorite}
+        onDelete={onDelete}
+        onMoveToFolder={onMoveToFolder}
+        folders={folders}
+      />
     </>
   );
 }
@@ -238,9 +331,16 @@ const menuStyles = StyleSheet.create({
   handle: { width: 40, height: 4, borderRadius: radius.full, alignSelf: 'center', marginBottom: spacing.stackMd },
   sheetTitle: { ...typography.bodyLg, fontFamily: 'Inter_600SemiBold', marginBottom: spacing.stackSm },
   divider: { height: 1, marginBottom: spacing.stackSm },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4, marginBottom: spacing.stackSm },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.gutter, paddingVertical: 14, paddingHorizontal: 4, borderRadius: radius.lg },
   itemIcon: { width: 44, height: 44, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
   itemLabel: { ...typography.bodyMd, fontFamily: 'Inter_500Medium' },
+  folderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 8, borderRadius: radius.lg },
+  folderDot: { width: 12, height: 12, borderRadius: 6 },
+  folderBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full, maxWidth: 100 },
+  folderBadgeText: { fontFamily: 'Inter_600SemiBold', fontSize: 10, color: '#fff' },
+  noFolders: { alignItems: 'center', gap: spacing.stackSm, paddingVertical: spacing.stackLg },
+  noFoldersText: { ...typography.bodyMd, textAlign: 'center' },
   closeBtn: { marginTop: spacing.stackSm, borderRadius: radius.xl, paddingVertical: 16, alignItems: 'center' },
   closeBtnText: { ...typography.button },
   confirmBox: { alignItems: 'center', gap: spacing.stackSm, paddingVertical: spacing.stackMd },

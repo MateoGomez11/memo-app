@@ -97,7 +97,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.screen, { backgroundColor: heroColor }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}

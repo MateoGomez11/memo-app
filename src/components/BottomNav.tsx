@@ -7,6 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, radius } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
@@ -17,6 +18,7 @@ export default function BottomNav() {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const { colors, t } = useAppContext();
+  const insets = useSafeAreaInsets();
 
   const active = route.name as Tab;
 
@@ -27,7 +29,11 @@ export default function BottomNav() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surfaceContainerLow, borderTopColor: colors.outlineVariant }]}>
+    <View style={[styles.container, {
+      backgroundColor: colors.surfaceContainerLow,
+      borderTopColor: colors.outlineVariant,
+      paddingBottom: Platform.OS === 'ios' ? 28 : 12 + insets.bottom,
+    }]}>
       {tabs.map((tab) => {
         const isActive = active === tab.key;
         return (
@@ -57,7 +63,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderTopWidth: 1,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
     paddingHorizontal: spacing.marginPage,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },

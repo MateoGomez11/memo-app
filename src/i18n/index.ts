@@ -44,6 +44,17 @@ const es = {
   no_audio: 'Sin audio',
   no_audio_msg: 'No hay archivo de audio guardado para este memo.',
 
+  // Folders
+  folder_all: 'Todos',
+  folder_new: 'Nueva carpeta',
+  folder_name_placeholder: 'Nombre de la carpeta',
+  folder_move: 'Mover a carpeta',
+  folder_remove_from: 'Quitar de carpeta',
+  folder_delete: 'Eliminar carpeta',
+  folder_no_folders: 'Sin carpetas aún',
+  folder_color_label: 'Color',
+  folder_favorites: 'Favoritos',
+
   // Recording
   recording_status: 'Grabando...',
   paused_status: 'Pausado',
@@ -219,6 +230,17 @@ const en: typeof es = {
   recovery_discard: 'Discard',
   no_audio: 'No audio',
   no_audio_msg: 'No audio file saved for this memo.',
+
+  // Folders
+  folder_all: 'All',
+  folder_new: 'New folder',
+  folder_name_placeholder: 'Folder name',
+  folder_move: 'Move to folder',
+  folder_remove_from: 'Remove from folder',
+  folder_delete: 'Delete folder',
+  folder_no_folders: 'No folders yet',
+  folder_color_label: 'Color',
+  folder_favorites: 'Favorites',
 
   // Recording
   recording_status: 'Recording...',

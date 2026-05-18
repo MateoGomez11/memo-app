@@ -3,6 +3,13 @@ export interface PendingDate {
   date: string;
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: number;
+}
+
 export interface Meeting {
   id: string;
   title: string;
@@ -21,6 +28,7 @@ export interface Meeting {
   createdAt: number;
   favorite?: boolean;
   processed?: boolean;
+  folderId?: string;
 }
 
 export interface ActionItem {
